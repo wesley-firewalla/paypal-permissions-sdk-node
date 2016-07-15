@@ -5,7 +5,7 @@ The PayPal Permission SDK provides javascript APIs for developers to request and
 ## Installation
 
 ```sh
-$ npm install paypal-sdk-permissions
+$ npm install paypal-permissions-sdk
 ```
 
 ## Example
@@ -13,7 +13,7 @@ $ npm install paypal-sdk-permissions
 Request permission:
 
 ```js
-let PermissionsApi = require('paypal-sdk-permissions')
+let PermissionsApi = require('paypal-permissions-sdk')
 let api = new PermissionsApi({
   mode: 'sandbox', // set "live" for production
   userId: 'xxx',
