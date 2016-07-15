@@ -5,7 +5,7 @@ The PayPal Permission SDK provides javascript APIs for developers to request and
 ## Installation
 
 ```sh
-$ npm install paypal-sdk-permissions-node
+$ npm install paypal-sdk-permissions
 ```
 
 ## Example
@@ -22,18 +22,20 @@ let api = new PermissionsApi({
   appId: 'APP-80W284485P519543T'
 })
 
-api.requestPermissions('AUTH_CAPTURE', 'http://localhost:8082/', function(error, response){
+let scope = ['ACCESS_BASIC_PERSONAL_DATA', 'ACCESS_ADVANCED_PERSONAL_DATA', 'DIRECT_PAYMENT', 'REFUND', 'AUTH_CAPTURE']
+let returnUrl = 'http://localhost:8082/oauth/token'
+api.requestPermissions(scope, returnUrl, function(error, response){
   if (!error) {
     console.log(api.getGrantPermissionUrl(response.token))  // redirect url to grant permissions
   }
 })
-
 ```
 
 Make API call with `token` and `token_secret`:
 
 ```js
 api.setAuth('token', 'token_secret')
-
-let response = api.GetBasicPersonalData()
+let response = api.GetBasicPersonalData(['full_name'], function(error, response){
+  console.log(response)
+})
 ```

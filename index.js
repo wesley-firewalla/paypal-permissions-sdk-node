@@ -1,4 +1,5 @@
 const Client = require('node-rest-client').Client
+const crypto = require('crypto')
 
 const _apiHosts = {
   live: 'svcs.paypal.com',
@@ -29,6 +30,19 @@ const _attributes = {
   'phone': 'http://axschema.org/contact/phone/default'
 }
 
+const paypalUrlEncode = s => {
+  var hex = '0123456789abcdef'
+  var untouched = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_'
+  var result = s.split('').map(function (c) {
+    if (untouched.indexOf(c) >= 0) { return c; }
+    else if (c == ' ') { return '+'; }else {
+      var code = c.charCodeAt(0)
+      return '%' + hex.charAt((code & 0xf0) >> 4) + hex.charAt(code & 0xf)
+    }
+  })
+  return result.join('')
+}
+
 class PermissionsApi {
 
   constructor (config) {
@@ -51,6 +65,16 @@ class PermissionsApi {
     }
   }
 
+  _getThirdPartyAuthHeaders (httpMethod, action) {
+    return {
+      'X-PAYPAL-AUTHORIZATION': this.getAuthString(httpMethod, this._buildRequestUrl(action)),
+      'X-PAYPAL-REQUEST-DATA-FORMAT': 'JSON',
+      'X-PAYPAL-RESPONSE-DATA-FORMAT': 'JSON',
+      'X-PAYPAL-APPLICATION-ID': this._config.appId,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }
+
   _sendRequest (action, requestData, callback) {
     let client = new Client()
     client.post(this._buildRequestUrl(action), requestData, function (data, response) {
@@ -66,12 +90,9 @@ class PermissionsApi {
   }
 
   _getAttributes (names) {
-    let list = []
-    for (let name of names) {
-      list.push({ attribute: _attributes[name] })
-    }
-
-    return list
+    return names.map(name => ({
+      attribute: _attributes[name]
+    }))
   }
 
   requestPermissions (scope, returnUrl, callback) {
@@ -128,13 +149,49 @@ class PermissionsApi {
     this._sendRequest('GetPermissions', args, callback)
   }
 
-  setAuth (token, tokenSecret) {
-    this._auth = { token, tokenSecret}
+  setAuth (accessToken, tokenSecret) {
+    this._auth = { accessToken: accessToken, tokenSecret: tokenSecret }
+  }
+
+  getAuthString (httpMethod, url) {
+    if (!this._auth) {
+      throw new Error('The accessToken and tokenSecret need to be set, please call "setAuth" method first.')
+    }
+
+    let params = {
+      oauth_consumer_key: this._config.userId,
+      oauth_version: '1.0',
+      oauth_signature_method: 'HMAC-SHA1',
+      oauth_token: this._auth.accessToken,
+      oauth_timestamp: Math.round(Date.now() / 1000)
+    }
+
+    // Convert params into paramString
+    let paramKeys = []
+    for (let p in params) {
+      paramKeys.push(p)
+    }
+    paramKeys.sort()
+
+    let paramString = ''
+    for (let i = 0; i < paramKeys.length; i += 1) {
+      let key = paramKeys[i]
+      paramString += (key + '=' + params[key])
+      if (i + 1 < paramKeys.length) {
+        paramString += '&'
+      }
+    }
+
+    let key = paypalUrlEncode(this._config.password) + '&' + paypalUrlEncode(this._auth.tokenSecret)
+    let signatureBase = httpMethod + '&' + paypalUrlEncode(url) + '&' + paypalUrlEncode(paramString)
+    let signature = crypto.createHmac('sha1', key).update(signatureBase).digest().toString('base64')
+
+    return `token=${this._auth.accessToken},signature=${signature},timestamp=${params.oauth_timestamp}`
   }
 
   getBasicPersonalData (attributeList, callback) {
     var args = {
-      headers: this._getBasicHeaders(),
+      headers: this._getThirdPartyAuthHeaders('POST', 'GetBasicPersonalData'),
       data: {
         requestEnvelope: _requestEnvelope,
         attributeList: this._getAttributes(attributeList)
@@ -146,7 +203,7 @@ class PermissionsApi {
 
   getAdvancedPersonalData (attributeList, callback) {
     var args = {
-      headers: this._getBasicHeaders(),
+      headers: this._getThirdPartyAuthHeaders('POST', 'GetAdvancedPersonalData'),
       data: {
         requestEnvelope: _requestEnvelope,
         attributeList: this._getAttributes(attributeList)
@@ -155,7 +212,6 @@ class PermissionsApi {
 
     this._sendRequest('GetAdvancedPersonalData', args, callback)
   }
-
 }
 
 module.exports = PermissionsApi
