@@ -35,7 +35,7 @@ Make API call with `token` and `token_secret`:
 
 ```js
 api.setAuth('token', 'token_secret')
-let response = api.GetBasicPersonalData(['full_name'], function(error, response){
+let response = api.getBasicPersonalData(['full_name'], function(error, response){
   console.log(response)
 })
 ```
