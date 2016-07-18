@@ -22,8 +22,9 @@ let api = new PermissionsApi({
   appId: 'APP-80W284485P519543T'
 })
 
+// For scope values, check https://developer.paypal.com/docs/classic/api/permissions/GetPermissions_API_Operation
 let scope = ['ACCESS_BASIC_PERSONAL_DATA', 'ACCESS_ADVANCED_PERSONAL_DATA', 'DIRECT_PAYMENT', 'REFUND', 'AUTH_CAPTURE']
-let returnUrl = 'http://localhost:8082/oauth/token'
+let returnUrl = 'http://localhost:8082/token'
 api.requestPermissions(scope, returnUrl, function(error, response){
   if (!error) {
     console.log(api.getGrantPermissionUrl(response.token))  // redirect url to grant permissions
@@ -31,11 +32,17 @@ api.requestPermissions(scope, returnUrl, function(error, response){
 })
 ```
 
+
+Get personal data api has to input `attributes`, possible values: `first_name`, `last_name`, `full_name`, `email`, 
+`business_name`, `country`, `payer_id`, `date_of_birth`, `postcode`, `street1`, `street2`, `city`, `state`, `phone`.
+
 Make API call with `token` and `token_secret`:
 
 ```js
-api.setAuth('token', 'token_secret')
-let response = api.getBasicPersonalData(['full_name'], function(error, response){
+let result = api.getAccessToken('<request_token>', '<verification_code>')	// { token: '<token>', tokenSecret: '<token_secret>'}
+
+api.setAuth(result.token, token.tokenSecret)
+let response = api.getBasicPersonalData(['first_name', 'last_name', 'full_name', 'email'], function(error, response){
   console.log(response)
 })
 ```
