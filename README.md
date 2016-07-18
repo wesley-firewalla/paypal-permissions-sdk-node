@@ -39,10 +39,10 @@ Get personal data api has to input `attributes`, possible values: `first_name`, 
 Make API call with `token` and `token_secret`:
 
 ```js
-let result = api.getAccessToken('<request_token>', '<verification_code>')	// { token: '<token>', tokenSecret: '<token_secret>'}
-
-api.setAuth(result.token, token.tokenSecret)
-let response = api.getBasicPersonalData(['first_name', 'last_name', 'full_name', 'email'], function(error, response){
-  console.log(response)
+api.getAccessToken('<request_token>', '<verification_code>', function(error, result){
+	api.setAuth(result.token, result.tokenSecret)
+	api.getBasicPersonalData(['first_name', 'last_name', 'full_name', 'email'], function(error, response){
+	  console.log(response)
+	})
 })
 ```
