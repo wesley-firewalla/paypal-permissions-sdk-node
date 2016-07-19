@@ -213,7 +213,7 @@ class PermissionsApi {
         let personalData = response.response.personalData
 
         let invertedAttributes = invert(_attributes)
-        let person = response.response.person = {}
+        let person = response.person = {}
         for(let data of personalData) {
           person[invertedAttributes[data.personalDataKey]] = data.personalDataValue
         }
