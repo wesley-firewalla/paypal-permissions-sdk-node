@@ -30,6 +30,11 @@ const _attributes = {
   'phone': 'http://axschema.org/contact/phone/default'
 }
 
+const _basicPersonalDataAttributeNames = ['first_name', 'last_name', 'full_name',
+  'email', 'business_name', 'country', 'payer_id']
+const _advancedPersonalDataAttributeNames = [..._basicPersonalDataAttributeNames,
+  'date_of_birth', 'postcode', 'street1', 'street2', 'city', 'state', 'phone']
+
 const paypalUrlEncode = s => {
   var hex = '0123456789abcdef'
   var untouched = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_'
@@ -44,15 +49,15 @@ const paypalUrlEncode = s => {
 }
 
 const invert = function (obj) {
-  let newObj = {};
+  let newObj = {}
 
   for (let prop in obj) {
-    if(obj.hasOwnProperty(prop)) {
-      newObj[obj[prop]] = prop;
+    if (obj.hasOwnProperty(prop)) {
+      newObj[obj[prop]] = prop
     }
   }
 
-  return newObj;
+  return newObj
 }
 
 class PermissionsApi {
@@ -97,6 +102,12 @@ class PermissionsApi {
         err.httpStatusCode = response.statusCode
         response = null
       }
+
+      if (data.responseEnvelope.ack === 'Failure'
+        || data.responseEnvelope.ack === 'FailureWithWarning') {
+        err = data.error[0]
+      }
+
       callback(err, data)
     })
   }
@@ -106,7 +117,7 @@ class PermissionsApi {
   }
 
   requestPermissions (scope, returnUrl, callback) {
-    var args = {
+    let args = {
       headers: this._getBasicHeaders(),
       data: {
         requestEnvelope: _requestEnvelope,
@@ -123,7 +134,7 @@ class PermissionsApi {
   }
 
   getAccessToken (requestToken, verificationCode, callback) {
-    var args = {
+    let args = {
       headers: this._getBasicHeaders(),
       data: {
         requestEnvelope: _requestEnvelope,
@@ -136,7 +147,7 @@ class PermissionsApi {
   }
 
   cancelPermissions (token, callback) {
-    var args = {
+    let args = {
       headers: this._getBasicHeaders(),
       data: {
         requestEnvelope: _requestEnvelope,
@@ -148,7 +159,7 @@ class PermissionsApi {
   }
 
   getPermissions (token, callback) {
-    var args = {
+    let args = {
       headers: this._getBasicHeaders(),
       data: {
         requestEnvelope: _requestEnvelope,
@@ -200,7 +211,7 @@ class PermissionsApi {
   }
 
   _getPersonalData (attributeList, action, callback) {
-    var args = {
+    let args = {
       headers: this._getThirdPartyAuthHeaders('POST', action),
       data: {
         requestEnvelope: _requestEnvelope,
@@ -208,13 +219,13 @@ class PermissionsApi {
       }
     }
 
-    this._sendRequest('GetBasicPersonalData', args, function(error, response) {
+    this._sendRequest(action, args, function (error, response) {
       if (!error && response.response) {
         let personalData = response.response.personalData
 
         let invertedAttributes = invert(_attributes)
         let person = response.person = {}
-        for(let data of personalData) {
+        for (let data of personalData) {
           person[invertedAttributes[data.personalDataKey]] = data.personalDataValue
         }
       }
@@ -222,12 +233,12 @@ class PermissionsApi {
     })
   }
 
-  getBasicPersonalData (attributeList, callback) {
-    this._getPersonalData(attributeList, 'GetBasicPersonalData', callback)
+  getBasicPersonalData (callback) {
+    this._getPersonalData(_basicPersonalDataAttributeNames, 'GetBasicPersonalData', callback)
   }
 
-  getAdvancedPersonalData (attributeList, callback) {
-    this._getPersonalData(attributeList, 'GetAdvancedPersonalData', callback)
+  getAdvancedPersonalData (callback) {
+    this._getPersonalData(_advancedPersonalDataAttributeNames, 'GetAdvancedPersonalData', callback)
   }
 }
 
