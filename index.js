@@ -43,6 +43,18 @@ const paypalUrlEncode = s => {
   return result.join('')
 }
 
+const invert = function (obj) {
+  let newObj = {};
+
+  for (let prop in obj) {
+    if(obj.hasOwnProperty(prop)) {
+      newObj[obj[prop]] = prop;
+    }
+  }
+
+  return newObj;
+}
+
 class PermissionsApi {
 
   constructor (config) {
@@ -90,9 +102,7 @@ class PermissionsApi {
   }
 
   _getAttributes (names) {
-    return names.map(name => ({
-      attribute: _attributes[name]
-    }))
+    return names.map(name => _attributes[name])
   }
 
   requestPermissions (scope, returnUrl, callback) {
@@ -189,28 +199,35 @@ class PermissionsApi {
     return `token=${this._auth.accessToken},signature=${signature},timestamp=${params.oauth_timestamp}`
   }
 
-  getBasicPersonalData (attributeList, callback) {
+  _getPersonalData (attributeList, action, callback) {
     var args = {
-      headers: this._getThirdPartyAuthHeaders('POST', 'GetBasicPersonalData'),
+      headers: this._getThirdPartyAuthHeaders('POST', action),
       data: {
         requestEnvelope: _requestEnvelope,
-        attributeList: this._getAttributes(attributeList)
+        attributeList: { attribute: this._getAttributes(attributeList) }
       }
     }
 
-    this._sendRequest('GetBasicPersonalData', args, callback)
+    this._sendRequest('GetBasicPersonalData', args, function(error, response) {
+      if (!error && response.response) {
+        let personalData = response.response.personalData
+
+        let invertedAttributes = invert(_attributes)
+        let person = response.response.person = {}
+        for(let data of personalData) {
+          person[invertedAttributes[data.personalDataKey]] = data.personalDataValue
+        }
+      }
+      callback(error, response)
+    })
+  }
+
+  getBasicPersonalData (attributeList, callback) {
+    this._getPersonalData(attributeList, 'GetBasicPersonalData', callback)
   }
 
   getAdvancedPersonalData (attributeList, callback) {
-    var args = {
-      headers: this._getThirdPartyAuthHeaders('POST', 'GetAdvancedPersonalData'),
-      data: {
-        requestEnvelope: _requestEnvelope,
-        attributeList: this._getAttributes(attributeList)
-      }
-    }
-
-    this._sendRequest('GetAdvancedPersonalData', args, callback)
+    this._getPersonalData(attributeList, 'GetAdvancedPersonalData', callback)
   }
 }
 

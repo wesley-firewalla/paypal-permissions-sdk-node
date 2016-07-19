@@ -46,3 +46,8 @@ api.getAccessToken('<request_token>', '<verification_code>', function(error, res
 	})
 })
 ```
+
+Actually you only need the email address when you want to do DIRECT_PAYMENT, you don't need to put X-PAYPAL-AUTHORIZATION in the paypal classic api. STUPID PAYPAL!!! Check this page http://stackoverflow.com/questions/10735258/using-the-x-paypal-authorization-header-for-transactionsearch-in-paypal
+
+For more information about permissions api please check https://developer.paypal.com/docs/classic/api/#permissions
+
