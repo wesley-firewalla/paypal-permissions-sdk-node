@@ -1,3 +1,5 @@
+'use strict'
+
 const Client = require('node-rest-client').Client
 const crypto = require('crypto')
 
