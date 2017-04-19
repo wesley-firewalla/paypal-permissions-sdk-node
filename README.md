@@ -64,4 +64,4 @@ For more information about permissions api please check https://developer.paypal
 
 ## License
 
-[MIT](./LICENSE.txt).
+[MIT](https://choosealicense.com/licenses/mit/)
