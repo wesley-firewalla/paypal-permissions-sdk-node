@@ -65,6 +65,8 @@ const invert = function (obj) {
 class PermissionsApi {
 
   constructor (config) {
+    config = config || {}
+    config.timeout = config.timeout || 15000
     this._config = config
   }
 
@@ -96,7 +98,9 @@ class PermissionsApi {
 
   _sendRequest (action, requestData, callback) {
     let client = new Client()
-    client.post(this._buildRequestUrl(action), requestData, function (data, response) {
+    requestData.requestConfig = { timeout: this._config.timeout }
+    requestData.responseConfig = { timeout: this._config.timeout }
+    var req = client.post(this._buildRequestUrl(action), requestData, function (data, response) {
       let err = null
       if (response.statusCode < 200 || response.statusCode >= 300) {
         err = new Error('Response Status : ' + response.statusCode)
@@ -112,6 +116,18 @@ class PermissionsApi {
 
       callback(err, data)
     })
+
+    req.on('requestTimeout', function (req) {
+      callback('request has expired')
+      req.abort()
+    });
+
+    req.on('responseTimeout', function (res) {
+      callback('response has expired')
+    });
+
+    //it's usefull to handle request errors to avoid, for example, socket hang up errors on request timeouts
+    req.on('error', callback)
   }
 
   _getAttributes (names) {
