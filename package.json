@@ -1,6 +1,6 @@
 {
   "name": "paypal-permissions-sdk",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "The PayPal Permission SDK provides javascript APIs for developers to request and obtain permissions from merchants and consumers, to execute APIs on behalf of them. The permissions include variety of operations from processing payments to accessing account transaction history.",
   "keywords": [
     "paypal",
@@ -24,6 +24,6 @@
   },
   "homepage": "https://github.com/wenbinke/paypal-permissions-sdk-node#readme",
   "dependencies": {
-    "node-rest-client": "^2.0.1"
+    "node-rest-client": "^3.1.0"
   }
 }
