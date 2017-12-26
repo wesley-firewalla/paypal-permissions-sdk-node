@@ -38,12 +38,12 @@ const _advancedPersonalDataAttributeNames = [..._basicPersonalDataAttributeNames
   'date_of_birth', 'postcode', 'street1', 'street2', 'city', 'state', 'phone']
 
 const paypalUrlEncode = s => {
-  var hex = '0123456789abcdef'
-  var untouched = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_'
-  var result = s.split('').map(function (c) {
+  const hex = '0123456789abcdef'
+  const untouched = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_'
+  const result = s.split('').map(function (c) {
     if (untouched.indexOf(c) >= 0) { return c; }
     else if (c == ' ') { return '+'; }else {
-      var code = c.charCodeAt(0)
+      const code = c.charCodeAt(0)
       return '%' + hex.charAt((code & 0xf0) >> 4) + hex.charAt(code & 0xf)
     }
   })
@@ -98,9 +98,8 @@ class PermissionsApi {
 
   _sendRequest (action, requestData, callback) {
     let client = new Client()
-    requestData.requestConfig = { timeout: this._config.timeout }
     requestData.responseConfig = { timeout: this._config.timeout }
-    var req = client.post(this._buildRequestUrl(action), requestData, function (data, response) {
+    const req = client.post(this._buildRequestUrl(action), requestData, function (data, response) {
       let err = null
       if (response.statusCode < 200 || response.statusCode >= 300) {
         err = new Error('Response Status : ' + response.statusCode)
@@ -120,11 +119,11 @@ class PermissionsApi {
     req.on('requestTimeout', function (req) {
       callback('request has expired')
       req.abort()
-    });
+    })
 
     req.on('responseTimeout', function (res) {
       callback('response has expired')
-    });
+    })
 
     //it's usefull to handle request errors to avoid, for example, socket hang up errors on request timeouts
     req.on('error', callback)
